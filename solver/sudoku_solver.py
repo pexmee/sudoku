@@ -3,12 +3,12 @@ from pathlib import Path
 import numpy as np
 from numpy.typing import NDArray
 from typing import List
+from random import randint
 
 DATASETS = "datasets/"
 DATA4_TXT = "4.txt"
 DATA9_TXT = "9.txt"
 DATA16_TXT = "16.txt"
-DATA5_TXT = "5.txt"
 
 """
 ~ Sudoku solver ~
@@ -66,12 +66,12 @@ def collect_puzzle(data_path: Path):
     puzzle = np.array(puzzle)
     return puzzle
 
-def contains_invalid_numbers(lst:List[int]):
+def contains_invalid_numbers(lst):
     return (max(lst) > len(lst)+1) or (min(lst) < 0)
 
 def check_validity(puzzle):
     for i, row in enumerate(puzzle):
-        if (contains_duplicates(occupied(row))):
+        if (contains_duplicates(taken_numbers(row))):
             print(f"Row {i} contains duplicates.")
             return False
         
@@ -83,7 +83,7 @@ def check_validity(puzzle):
         if (len(col) != len(puzzle)):
             print(f"Column {i} has an invalid column length. Expected {len(puzzle)}, got {len(col)}.")
 
-        if (contains_duplicates(occupied(col))):
+        if (contains_duplicates(taken_numbers(col))):
             print(f"Column {i} contains duplicates")
             return False
         
@@ -97,7 +97,7 @@ def check_free_spots(lst):
     return [i for i, x in enumerate(lst) if x == 0]
 
 
-def occupied(lst):
+def taken_numbers(lst):
     return [x for x in lst if x != 0]
 
 def contains_duplicates(lst):
@@ -108,7 +108,7 @@ def possibilities(lst):
 
 
 def check_available(lst):
-    return [x for x in possibilities(lst) if x not in occupied(lst)]
+    return [x for x in possibilities(lst) if x not in taken_numbers(lst)]
 
 def also_available_in_column(options, lst):
     # If it isn't already in the column
@@ -149,12 +149,11 @@ def solve(puzzle: NDArray):
                 checked.append(index)
                 continue
             
-            puzzle[index][j] = insertable[0]
+            puzzle[index][j] = insertable[randint(0,len(insertable)-1)]
             cols = get_columns(puzzle)
             checked.clear()
             break
 
-        # print_puzzle(puzzle)
         if asdf == 100_000_000:
             break
 
@@ -166,7 +165,7 @@ def solve(puzzle: NDArray):
 def main():
     parent = Path(__file__).parent.parent
     
-    for x in [DATA4_TXT,DATA9_TXT,DATA16_TXT,DATA5_TXT]:
+    for x in [DATA4_TXT,DATA9_TXT,DATA16_TXT]:
         data_path = Path.joinpath(parent, DATASETS+x)
         puzzle = collect_puzzle(data_path)
         valid = check_validity(puzzle)
@@ -174,7 +173,7 @@ def main():
         puzzle_size = f"{size}x{size}"
 
         if not valid:
-            print(f"{x} is an invalid {puzzle_size} puzzle.")
+            print(f"{x} is an invalid {puzzle_size} puzzle, and therefore has no solution.")
             continue
 
         print(f"Solving {size}x{size} puzzle...")
