@@ -1,23 +1,29 @@
-from tempfile import NamedTemporaryFile
-from solver.sudoku_solver import (
-    yield_rows,
-    collect_puzzle,
-    contains_invalid_numbers,
-    check_validity,
-    check_free_spots,
-    taken_numbers,
-    contains_duplicates,
-    possibilities,
-    check_available,
-    also_available_in_column,
-    get_columns,
-    solve,
-)
-from random import choice
+from pathlib import Path
+from random import choice, randint
 from string import ascii_letters, digits
+from tempfile import NamedTemporaryFile
+
 import numpy as np
-from random import randint
 import pytest
+
+from solver.sudoku_solver import (
+    DATA4_TXT,
+    DATA9_TXT,
+    DATA16_TXT,
+    also_available_in_column,
+    check_available,
+    check_free_spots,
+    check_validity,
+    collect_puzzle,
+    contains_duplicates,
+    contains_invalid_numbers,
+    get_columns,
+    possibilities,
+    print_puzzle,
+    solve,
+    taken_numbers,
+    yield_rows,
+)
 
 
 def test_yield_rows():
@@ -249,21 +255,21 @@ def test_check_available(input_data, expected):
         (
             (
                 [1, 2, 3, 4],
-                [1,0,3,0,0,5],
+                [1, 0, 3, 0, 0, 5],
             ),
-            [2,4],
+            [2, 4],
         ),
         (
             (
-                [6,7,8],
-                [1,2,3,4,5,0,0,8,9,10],
+                [6, 7, 8],
+                [1, 2, 3, 4, 5, 0, 0, 8, 9, 10],
             ),
-            [6,7],
+            [6, 7],
         ),
         (
             (
-                [5,6,7],
-                [0,0,0,0,5,6,7],
+                [5, 6, 7],
+                [0, 0, 0, 0, 5, 6, 7],
             ),
             [],
         ),
@@ -272,3 +278,98 @@ def test_check_available(input_data, expected):
 def test_also_available_in_column(input_data, expected):
     assert also_available_in_column(*input_data) == expected
 
+
+def test_get_columns():
+    puzzle1 = np.array(
+        [
+            [1, 2, 3, 4],
+            [4, 3, 2, 1],
+            [0, 0, 0, 0],
+            [3, 2, 1, 0],
+        ]
+    )
+    puzzle2 = np.array(
+        [
+            [1, 2, 3],
+            [4, 3, 2],
+            [0, 0, 0],
+        ]
+    )
+    puzzle3 = np.array(
+        [
+            [1, 2, 3, 4, 5, 6],
+            [4, 3, 2, 1, 0, 0],
+            [0, 0, 0, 0, 1, 4],
+            [3, 2, 1, 0, 6, 5],
+            [0, 0, 0, 0, 3, 1],
+            [0, 0, 1, 0, 0, 0],
+        ]
+    )
+    expected_columns = [
+        [
+            [1, 4, 0, 3],
+            [2, 3, 0, 2],
+            [3, 2, 0, 1],
+            [4, 1, 0, 0],
+        ],
+        [
+            [1, 4, 0],
+            [2, 3, 0],
+            [3, 2, 0],
+        ],
+        [
+            [1, 4, 0, 3, 0, 0],
+            [2, 3, 0, 2, 0, 0],
+            [3, 2, 0, 1, 0, 1],
+            [4, 1, 0, 0, 0, 0],
+            [5, 0, 1, 6, 3, 0],
+            [6, 0, 4, 5, 1, 0],
+        ],
+    ]
+    for puzzle, expected in zip([puzzle1, puzzle2, puzzle3], expected_columns):
+        for col, exp_col in zip(get_columns(puzzle), expected):
+            assert list(col) == exp_col
+
+
+def test_solve():
+    expected_4txt = np.array(
+        [
+            [4, 1, 3, 2],
+            [2, 3, 1, 4],
+            [3, 4, 2, 1],
+            [1, 2, 4, 3],
+        ]
+    )
+
+    parent = Path(__file__).parent.parent
+
+    for path in [DATA4_TXT, DATA9_TXT, DATA16_TXT]:
+        data_path = Path.joinpath(parent, path)
+        puzzle = collect_puzzle(data_path)
+        solved = solve(puzzle)
+
+        if path == DATA4_TXT:
+            assert np.array_equal(solved, expected_4txt)
+
+        else:
+            assert solved == []
+
+
+def test_print_puzzle(monkeypatch):
+    """Totally unnecessary."""
+
+    import sys
+    from io import StringIO
+
+    mocked = StringIO()
+    monkeypatch.setattr(sys, "stdout", mocked)
+
+    parent = Path(__file__).parent.parent
+    data_path = Path.joinpath(parent, DATA4_TXT)
+    puzzle = collect_puzzle(data_path)
+
+    print_puzzle(puzzle)
+    for row, expected_row in zip(
+        puzzle, mocked.getvalue().strip()[len("puzzle:") + 1 : :].split("\n")
+    ):
+        assert str(row) == expected_row
