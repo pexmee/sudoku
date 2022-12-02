@@ -26,6 +26,9 @@ for each row and column we:
 Might have to do something like this every time:
     * go through all rows and choose the one with the least options
     * choose the corresponding column of available columns with the least option 
+
+TODO: Make sure that the solver can try all possible permutations of the puzzle if it couldn't solve it the first way.
+    * And once it has tried all possible permutations, make it say it is unsolvable.
 """
 
 
@@ -135,6 +138,15 @@ def get_columns(puzzle):
     return cols
 
 
+def done(puzzle):
+    for row in puzzle:
+        for col in row:
+            if col == 0:
+                return False
+
+    return True
+
+
 def solve(puzzle: NDArray):
     valid = check_validity(puzzle)
     size = len(puzzle)
@@ -149,15 +161,17 @@ def solve(puzzle: NDArray):
 
     cols = get_columns(solved)
     asdf = 0
-    while True:
+    while not done(puzzle):
         asdf += 1
         checked = []
 
         index = index_with_least_free_slots(solved, checked)
-        if asdf == 10000:
-            print("heheeee")
+
         if index == None:
             break
+
+        if asdf == 10000:
+            print("debug this stuff")
 
         free = check_free_spots(
             solved[index]
@@ -172,18 +186,23 @@ def solve(puzzle: NDArray):
         )  # What numbers are available for this row
 
         for j in free:
+            cnt = 0
             insertable = also_available_in_column(available_nums, cols[j])
 
             if not insertable:
+                cnt += 1
                 checked.append(index)
                 continue
+
+            if cnt == len(free):
+                break
 
             solved[index][j] = insertable[randint(0, len(insertable) - 1)]
             cols = get_columns(solved)
             checked.clear()
             break
 
-        if asdf == 100_000_000:
+        if asdf == 100_000:
             break
 
     return solved
