@@ -1,2 +1,2 @@
 # sudoku
-Sudoku solver and generator written in python
+Low effort sudoku solver and generator written in python
