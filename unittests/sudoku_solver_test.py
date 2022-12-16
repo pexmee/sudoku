@@ -20,10 +20,13 @@ from solver.sudoku_solver import (
     get_columns,
     possibilities,
     print_puzzle,
-    solve,
     taken_numbers,
+    solve_naive,
+    solver,
     yield_rows,
+    solvable,
 )
+from soduko_generator.sudoku_generator import generate_puzzle, Difficulty
 
 
 def test_yield_rows():
@@ -343,17 +346,11 @@ def test_solve():
 
     parent = Path(__file__).parent.parent
 
-    for path in [DATA4_TXT, DATA9_TXT, DATA16_TXT]:
-        data_path = Path.joinpath(parent, path)
-        puzzle = collect_puzzle(data_path)
-        solved = solve(puzzle)
-
-        if path == DATA4_TXT:
-            assert np.array_equal(solved, expected_4txt)
-
-        else:
-            assert solved == []
-
+    path = DATA4_TXT
+    data_path = Path.joinpath(parent, path)
+    puzzle = collect_puzzle(data_path)
+    solved = solve_naive(puzzle)
+    assert np.array_equal(solved, expected_4txt)
 
 def test_print_puzzle(monkeypatch):
     """Totally unnecessary."""
@@ -373,3 +370,8 @@ def test_print_puzzle(monkeypatch):
         puzzle, mocked.getvalue().strip()[len("puzzle:") + 1 : :].split("\n")
     ):
         assert str(row) == expected_row
+
+def test_solver():
+    assert solver(collect_puzzle(DATA4_TXT))
+
+

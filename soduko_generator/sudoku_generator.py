@@ -12,14 +12,6 @@ from solver.sudoku_solver import (
     possibilities,
 )
 
-"""
-TODO: Right idea, wrong execution I believe.
-Instead of making a puzzle with pseudo-occupied squares,
-actually occupy them, but if it is not possible to occupy a certain row with x amount of 
-digits, just ignore it and jump to the next one.
-"""
-
-
 def check_all_nums_used(puzzle):
     poss = possibilities(puzzle[0])  # just take any random
     for row in puzzle:
@@ -52,7 +44,7 @@ def insert_remaining_nums(puzzle, poss_remaining):
                 ]  # just take any random one.
                 poss_remaining.remove(row[idx])
 
-            # poss_remaining.remove(to_insert)
+    return puzzle
 
 
 class Difficulty(Enum):
@@ -108,9 +100,6 @@ def main():
     easy = generate_puzzle(5, Difficulty.EASY)
     medium = generate_puzzle(5, Difficulty.MEDIUM)
     hard = generate_puzzle(5, Difficulty.HARD)
-    # print(solve(easy))
-    # print(solve(medium))
-    # print(solve(hard))
     print(f"easy: \n{easy}")
     print(f"medium: \n{medium}")
     print(f"hard: \n{hard}")
